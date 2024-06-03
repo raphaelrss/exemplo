@@ -4,7 +4,9 @@ env:
     hostname: 52.255.142.35
     username: azureuser
     destination: /var/www/html
-    
+    target_username: root
+    target_group: root
+
 on:
     push:
         branches:
@@ -27,6 +29,10 @@ jobs:
             - run: mkdir -p ~/.ssh
             - run: echo "${{secrets.SSH_PRIVATE_KEY}}" > ~/.ssh/id_rsa
             - run: chmod 600 ~/.ssh/id_rsa
+            - run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{env.username}}@${{env.hostname}} | sudo chown --recursive ${{env.username}} ${{env.destination}}"
+
             - run: rsync --archive --verbose --compress --delete -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" ./ ${{env.username}}@${{env.hostname}}:${{env.destination}}
               continue-on-error: true
+            - run: ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ${{env.username}}@${{env.hostname}} | sudo chown --recursive ${{env.target_username}}:${{env.target_group}} ${{env.destination}}"
+
             - run: srm ~/.ssh/id_rsa
